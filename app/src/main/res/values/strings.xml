@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">TugasRecycleView</string>
+    <string name="Close">Close</string>
+    <string name="Open">Open</string>
+
+    <string name="price">HARGA</string>
+    <string name="Harga_Taman">350.000</string>
+    <!--    fragment neozone-->
+
+    <string name="Harga_Taman1">350.000</string>
+    <!--    fragment universe-->
+
+    <string name="price3">HARGA</string>
+    <string name="Harga_Taman2">350.000</string>
+    <string-array name="album">
+        <item>Tropical Garden</item>
+        <item>Eropan Garden</item>
+        <item>African Garden</item>
+        <item>Indonesia Garden</item>
+    </string-array>
+    <string-array name="star">
+        <item>4.5</item>
+        <item>4.7</item>
+        <item>4.4</item>
+        <item>4.9</item>
+    </string-array>
+    <string-array name="deskripsi">
+        <item>Rp. 285.000</item>
+        <item>Rp. 300.000</item>
+        <item>Rp. 250.000</item>
+        <item>Rp. 185.000</item>
+    </string-array>
+</resources>
