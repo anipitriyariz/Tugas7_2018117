@@ -1,31 +1,48 @@
 package com.example.tugasrecycleview;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
+import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import com.example.tugasrecycleview.databinding.ActivityMainBinding;
 import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.timepicker.MaterialTimePicker;
+import com.google.android.material.timepicker.TimeFormat;
+
+import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
     private DrawerLayout dl;
     private ActionBarDrawerToggle abdt;
+    private ActivityMainBinding binding;
+    private MaterialTimePicker picker;
+    private Calendar calendar;
+    private AlarmManager alarmManager;
+    private PendingIntent pendingIntent;
 
-    RecyclerView recylerView;
-
-    String s1[], s2[], s3[];
-    int images[] =
-            {R.drawable.garden1,R.drawable.garden2,R.drawable.garden3,R.drawable.garden3};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+
+        // action bar
         dl = (DrawerLayout)findViewById(R.id.dl);
         abdt = new ActionBarDrawerToggle(this,dl,R.string.Open,R.string.Close);
         abdt.setDrawerIndicatorEnabled(true);
@@ -35,39 +52,122 @@ public class MainActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        NavigationView nav_view = (NavigationView)findViewById(R.id.nav_view);
-
-        nav_view.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+        NavigationView navigationView = (NavigationView)findViewById(R.id.nav_view);
+        navigationView.setCheckedItem(R.id.nav_alarm);
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
-                if (id == R.id.nav_member){
+                if (id == R.id.nav_alarm){
                     Intent a = new Intent(MainActivity.this,
                             MainActivity.class);
                     startActivity(a);
+                }else if (id == R.id.nav_member){
+                    Intent b = new Intent(MainActivity.this,
+                            MemberFragment.class);
+                    startActivity(b);
                 }else if (id == R.id.nav_chat){
-                    Intent a = new Intent(MainActivity.this,
+                    Intent c = new Intent(MainActivity.this,
                             ChatFragment.class);
-                    startActivity(a);
+                    startActivity(c);
                 }else if (id == R.id.nav_profil){
-                    Intent a = new Intent(MainActivity.this,
+                    Intent d = new Intent(MainActivity.this,
                             ProfileFragment.class);
-                    startActivity(a);                 }
-
-            return true;
-        }
+                    startActivity(d);
+                }
+                return true;
+            }
         });
-        recylerView = findViewById(R.id.recyclerView);
 
-        s1 = getResources().getStringArray(R.array.album);
-        s2 = getResources().getStringArray(R.array.deskripsi);
-        s3 = getResources().getStringArray(R.array.star);
-        AlbumAdapter appAdapter = new AlbumAdapter(this, s1, s2, s3, images);
-        recylerView.setAdapter(appAdapter);
-        LinearLayoutManager layoutManager = new LinearLayoutManager((this), RecyclerView.HORIZONTAL, false);
-        recylerView.setLayoutManager(layoutManager);
+        //set alarm
+        createNotificationChannel();
+        binding.selectedTimeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showTimePicker();
+            }
+        });
+        binding.setAlarmBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setAlarm();
+            }
+        });
+        binding.cancelAlarmBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                cancelAlarm();
+            }
+        });
     }
-        @Override
-        public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        return abdt.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
-    } }
+
+    private void cancelAlarm() {
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        pendingIntent = PendingIntent.getBroadcast(this, 0,
+                intent, 0);
+        if (alarmManager == null) {
+            alarmManager = (AlarmManager)
+                    getSystemService(Context.ALARM_SERVICE);
+        }
+        alarmManager.cancel(pendingIntent);
+        Toast.makeText(this, "Alarm Cancelled",
+                Toast.LENGTH_SHORT).show();
+    }
+
+    private void setAlarm() {
+        alarmManager = (AlarmManager)
+                getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, AlarmReceiver.class);
+        pendingIntent = PendingIntent.getBroadcast(this, 0,
+                intent, 0);
+        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
+                calendar.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, pendingIntent);
+        Toast.makeText(this, "Alarm Set Successfully",
+                Toast.LENGTH_SHORT).show();
+    }
+
+    private void showTimePicker() {
+        picker = new MaterialTimePicker.Builder()
+                .setTimeFormat(TimeFormat.CLOCK_24H)
+                .setHour(12)
+                .setMinute(0)
+                .setTitleText("Select Alarm Time")
+                .build();
+        picker.show(getSupportFragmentManager(), "AlarmManager");
+        picker.addOnPositiveButtonClickListener(new View.OnClickListener() {
+            @SuppressLint("DefaultLocale")
+            @Override
+            public void onClick(View view) {
+                if (picker.getHour() > 12) {
+                    binding.selectedTime.setText(String.format("%02d : %02d",
+                                    picker.getHour(), picker.getMinute())
+                    );
+                } else {
+                    binding.selectedTime.setText(picker.getHour()
+                            + " : " + picker.getMinute() + " ");
+                }
+                calendar = Calendar.getInstance();
+                calendar.set(Calendar.HOUR_OF_DAY,
+                        picker.getHour());
+                calendar.set(Calendar.MINUTE,
+                        picker.getMinute());
+                calendar.set(Calendar.SECOND, 0);
+                calendar.set(Calendar.MILLISECOND, 0);
+            }
+        });
+    }
+
+    private void createNotificationChannel() {
+        CharSequence name = "2018117";
+        String description = "Info Terbaru!!!";
+        int importance = NotificationManager.IMPORTANCE_HIGH;
+        NotificationChannel channel = new
+                NotificationChannel("AlarmManager", name, importance);
+        channel.setDescription(description);
+        NotificationManager notificationManager =
+                getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
+
+    }
+}
