@@ -19,6 +19,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+
+import androidx.work.ExistingWorkPolicy;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+
+
 import com.example.tugasrecycleview.databinding.ActivityMainBinding;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.timepicker.MaterialTimePicker;
@@ -43,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         // action bar
-        dl = (DrawerLayout)findViewById(R.id.dl);
-        abdt = new ActionBarDrawerToggle(this,dl,R.string.Open,R.string.Close);
+        dl = (DrawerLayout) findViewById(R.id.dl);
+        abdt = new ActionBarDrawerToggle(this, dl, R.string.Open, R.string.Close);
         abdt.setDrawerIndicatorEnabled(true);
 
         dl.addDrawerListener(abdt);
@@ -52,25 +58,25 @@ public class MainActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        NavigationView navigationView = (NavigationView)findViewById(R.id.nav_view);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setCheckedItem(R.id.nav_alarm);
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
-                if (id == R.id.nav_alarm){
+                if (id == R.id.nav_alarm) {
                     Intent a = new Intent(MainActivity.this,
-                            MainActivity.class);
+                            Alarm.class);
                     startActivity(a);
-                }else if (id == R.id.nav_member){
+                } else if (id == R.id.nav_member) {
                     Intent b = new Intent(MainActivity.this,
                             MemberFragment.class);
                     startActivity(b);
-                }else if (id == R.id.nav_chat){
+                } else if (id == R.id.nav_chat) {
                     Intent c = new Intent(MainActivity.this,
                             ChatFragment.class);
                     startActivity(c);
-                }else if (id == R.id.nav_profil){
+                } else if (id == R.id.nav_profil) {
                     Intent d = new Intent(MainActivity.this,
                             ProfileFragment.class);
                     startActivity(d);
@@ -78,96 +84,26 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
-
-        //set alarm
-        createNotificationChannel();
-        binding.selectedTimeBtn.setOnClickListener(new View.OnClickListener() {
+        //work manager
+        setContentView(binding.getRoot());
+        final OneTimeWorkRequest request = new
+                OneTimeWorkRequest.Builder(MyWorker.class).build();
+        binding.button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showTimePicker();
+                WorkManager.getInstance().enqueueUniqueWork(
+                        "Notifikasi", ExistingWorkPolicy.REPLACE,
+                        request);
             }
         });
-        binding.setAlarmBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                setAlarm();
-            }
-        });
-        binding.cancelAlarmBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                cancelAlarm();
-            }
-        });
-    }
 
-    private void cancelAlarm() {
-        Intent intent = new Intent(this, AlarmReceiver.class);
-        pendingIntent = PendingIntent.getBroadcast(this, 0,
-                intent, 0);
-        if (alarmManager == null) {
-            alarmManager = (AlarmManager)
-                    getSystemService(Context.ALARM_SERVICE);
-        }
-        alarmManager.cancel(pendingIntent);
-        Toast.makeText(this, "Alarm Cancelled",
-                Toast.LENGTH_SHORT).show();
-    }
-
-    private void setAlarm() {
-        alarmManager = (AlarmManager)
-                getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(this, AlarmReceiver.class);
-        pendingIntent = PendingIntent.getBroadcast(this, 0,
-                intent, 0);
-        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
-                calendar.getTimeInMillis(),
-                AlarmManager.INTERVAL_DAY, pendingIntent);
-        Toast.makeText(this, "Alarm Set Successfully",
-                Toast.LENGTH_SHORT).show();
-    }
-
-    private void showTimePicker() {
-        picker = new MaterialTimePicker.Builder()
-                .setTimeFormat(TimeFormat.CLOCK_24H)
-                .setHour(12)
-                .setMinute(0)
-                .setTitleText("Select Alarm Time")
-                .build();
-        picker.show(getSupportFragmentManager(), "AlarmManager");
-        picker.addOnPositiveButtonClickListener(new View.OnClickListener() {
-            @SuppressLint("DefaultLocale")
-            @Override
-            public void onClick(View view) {
-                if (picker.getHour() > 12) {
-                    binding.selectedTime.setText(String.format("%02d : %02d",
-                                    picker.getHour(), picker.getMinute())
-                    );
-                } else {
-                    binding.selectedTime.setText(picker.getHour()
-                            + " : " + picker.getMinute() + " ");
-                }
-                calendar = Calendar.getInstance();
-                calendar.set(Calendar.HOUR_OF_DAY,
-                        picker.getHour());
-                calendar.set(Calendar.MINUTE,
-                        picker.getMinute());
-                calendar.set(Calendar.SECOND, 0);
-                calendar.set(Calendar.MILLISECOND, 0);
-            }
-        });
-    }
-
-    private void createNotificationChannel() {
-        CharSequence name = "2018117";
-        String description = "Info Terbaru!!!";
-        int importance = NotificationManager.IMPORTANCE_HIGH;
-        NotificationChannel channel = new
-                NotificationChannel("AlarmManager", name, importance);
-        channel.setDescription(description);
-        NotificationManager notificationManager =
-                getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);
 
     }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        return abdt.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
+    }
+
+
 }
