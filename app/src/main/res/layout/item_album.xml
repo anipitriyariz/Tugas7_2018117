@@ -25,7 +25,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@color/black"/>
-
             <TextView
                 android:id="@+id/myText1"
                 android:layout_width="wrap_content"

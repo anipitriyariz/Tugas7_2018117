@@ -20,6 +20,9 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 
+import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
@@ -47,6 +50,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        RecyclerView recylerView;
+
+        String s1[], s2[],s3[];
+        int images[] = {R.drawable.garden1,R.drawable.garden2,R.drawable.garden3,R.drawable.garden4};
 
         // action bar
         dl = (DrawerLayout) findViewById(R.id.dl);
@@ -84,6 +92,22 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+        //recycle View
+        recylerView = findViewById(R.id.recyclerView);
+
+        s1 = getResources().getStringArray(R.array.album);
+        s2 = getResources().getStringArray(R.array.deskripsi);
+        s3 = getResources().getStringArray(R.array.star);
+        AlbumAdapter appAdapter = new AlbumAdapter(
+                this,s1,s2,s3,images
+        );
+        recylerView.setAdapter(appAdapter);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(
+                MainActivity.this,LinearLayoutManager.HORIZONTAL, false
+        );
+        recylerView.setLayoutManager(layoutManager);
+        recylerView.setItemAnimator(new DefaultItemAnimator());
+
         //work manager
         setContentView(binding.getRoot());
         final OneTimeWorkRequest request = new
